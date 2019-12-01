@@ -47,4 +47,7 @@ bar_plot_data =spark.sql(
   group by month 
   order by month''').toPandas()
 
-sb.barplot(x='month', y='nb_cancelled',data=bar_plot_data)
+sb.barplot(x='month', y='nb_cancelled',
+           data=bar_plot_data,
+           color='blue',
+           saturation=.5)
