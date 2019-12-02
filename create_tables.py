@@ -30,7 +30,7 @@ flights_df = spark.read.csv(
     header=True,
     sep=',',
     inferSchema=True,
-    nullValue=None
+    nullValue='NA'
 ).cache()
 flights_df.printSchema()
 
