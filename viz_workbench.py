@@ -95,6 +95,7 @@ def histplot(a,b) :
 histplot(pandas_df_Dep_delay['DepDelay'],pandas_df_Dep_delay2['DepDelay'])
 
 
+
 ### Approach2 agregation and data pruning
   
 # ### Data Selection 
@@ -111,43 +112,48 @@ spark_data_df.createOrReplaceTempView('flights')
 # Free up mem ressources from old dataframe
 flight_raw_df.unpersist()
 
+
+
+
 # #### Question 2 : Which airlines have, proportionally the most cancelations (top 20)
 pandas_df = spark.sql(
-  '''Select f.avg_cancelations, c.Description
-      SELECT UniqueCarrier, (sum(cancelled)/sum(1))*100 as avg_cancelations
-      FROM flights
-      GROUP By UniqueCarrier
-      ORDER by avg_cancelations DESC''').toPandas()
+  '''Select c.Description as airline, c.code, f.avg_cancel, nb_flights, nb_cancelled
+     FROM (
+           SELECT UniqueCarrier, (sum(cancelled)/sum(1))*100 as avg_cancel, 
+                  sum(1) as nb_flights, sum(cancelled) as nb_cancelled
+           FROM flights
+           GROUP By UniqueCarrier
+           ORDER by avg_cancel DESC
+           ) f 
+      INNER JOIN flights.carriers c ON c.code = f.UniqueCarrier
+  ''').toPandas()
+pandas_df.head(20)
 
 
+import matplotlib.pyplot as plt
+import seaborn as sns
 
-spark.sql("describe tables in flights")
-
-
-
-
-# #### Distribution of flights per day by airline 
-
-
-test_df = spark.sql('''select month, DayofMonth,UniqueCarrier, sum(Cancelled)
-             from flights
-             group by month, DayofMonth,UniqueCarrier''')
-
-
-# #### Question 1: Which are the top air
-
-
-
-
-## Bar plot
-
-bar_plot_data =spark.sql(
-  '''select month, count(Cancelled) as nb_cancelled
-  from canceled_month
-  group by month 
-  order by month''').toPandas()
-
-sb.barplot(x='month', y='nb_cancelled',
-           data=bar_plot_data,
+sns.barplot(x='airline', y='avg_cancel',
+           data=pandas_df,
            color='blue',
            saturation=.5)
+
+
+# #### using plotly
+# #### Limited support 
+# Cannot display directly in Workbench.
+# 1. Save to HTML 
+# 2. Display IFrame
+
+import chart_studio.plotly as py
+import plotly.graph_objects as go
+from IPython.core.display import display, HTML
+
+fig = go.Figure(data=
+                go.Bar(x=pandas_df.airline,
+                       y=pandas_df.avg_cancel)
+               )
+fig.write_html('/cdn/plotly_figure.html', auto_open=True)
+HTML("<iframe height='400' width='800' src=plotly_figure.html>")
+
+
