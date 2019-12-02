@@ -133,14 +133,15 @@ pandas_df.head(20)
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-sns.barplot(x='airline', y='avg_cancel',
-           data=pandas_df,
-           color='blue',
-           saturation=.5)
+def barPlot() :
+  chart = sns.barplot(x='airline', y='avg_cancel',
+                      data=pandas_df,color='blue', saturation=.5)
+  chart.set_xticklabels(chart.get_xticklabels(), 
+                      rotation=45, horizontalalignment='right',
+                      fontweight='light', fontsize='small')
+barPlot()
 
-
-# #### using plotly
-# #### Limited support 
+# ### using plotly - Limited support 
 # Cannot display directly in Workbench.
 # 1. Save to HTML 
 # 2. Display IFrame
