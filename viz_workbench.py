@@ -7,7 +7,7 @@
 #  - single line evaluation
  
 
-# ## **0. Load data**
+# ## **Load data**
 # We'll be using Spark to access data for 2 reasons : 
 # - Integration with the CDH and HDP platforms
 # - Distributed computing : 
@@ -51,7 +51,7 @@ for col in flight_raw_df.columns:
 
 
 
-# ### **1. Visual analysis 
+# ## **Visual analysis**
 # Most visualisation will fail for large volumes > ~500k/1M
 # Ex : Trying to bring the data back as a Pandas Dataframe will crash the driver
 
@@ -87,6 +87,7 @@ pandas_df_Dep_delay2 = flight_raw_df.select(['DepDelay'])\
   .toPandas()
 pandas_df_Dep_delay2.info()
 
+
 def histplot(a,b) : 
   plt.hist([a,b], bins= 20, color=['r','b'], range=[-10,60])
   plt.title ('histograms')
@@ -96,7 +97,7 @@ histplot(pandas_df_Dep_delay['DepDelay'],pandas_df_Dep_delay2['DepDelay'])
 
 
 
-### Approach2 agregation and data pruning
+### Approach 2 agregation and data pruning
   
 # ### Data Selection 
 # Pre Selecting columns of interest (leaving out columns with nulls)
@@ -114,8 +115,7 @@ flight_raw_df.unpersist()
 
 
 
-
-# #### Question 2 : Which airlines have, proportionally the most cancelations (top 20)
+# ### Question 2 : Which airlines have, proportionally, the most cancelations (top 10)
 pandas_df = spark.sql(
   '''Select c.Description as airline, c.code, f.avg_cancel, nb_flights, nb_cancelled
      FROM (
@@ -127,9 +127,9 @@ pandas_df = spark.sql(
            ) f 
       INNER JOIN flights.carriers c ON c.code = f.UniqueCarrier
   ''').toPandas()
-pandas_df.head(20)
+pandas_df.head(10)
 
-
+# #### Plot Answer - Using Seaborn
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -141,7 +141,8 @@ def barPlot() :
                       fontweight='light', fontsize='small')
 barPlot()
 
-# ### using plotly - Limited support 
+# #### Plot Answer - using plotly - 
+# #### **NOTE:** Limited support 
 # Cannot display directly in Workbench.
 # 1. Save to HTML 
 # 2. Display IFrame
@@ -155,6 +156,9 @@ fig = go.Figure(data=
                        y=pandas_df.avg_cancel)
                )
 fig.write_html('/cdn/plotly_figure.html', auto_open=True)
-HTML("<iframe height='400' width='800' src=plotly_figure.html>")
+HTML("<iframe height='600' width='1000' src=plotly_figure.html>")
+
+
+####  
 
 
