@@ -18,6 +18,11 @@
 #   -  Agregation 
 #   -  Sampling
 
+# file paths 
+flights_path='airlines/flights/'
+carriers_path='airlines/carriers/carriers.csv'
+
+
 # ### Start Spark session
 from pyspark.sql import SparkSession
 from pyspark.sql.types import *
@@ -26,21 +31,34 @@ spark = SparkSession.builder \
   .master('yarn') \
   .config("spark.executor.instances","3")\
   .config("spark.executor.memory","2g")\
-  .appName('Visualisation') \
+  .appName('visualisation_workbench') \
   .getOrCreate()
 
 
-# ### Acess data from Hive ( prepared by the setup.sh script )
+# ### Acess data ( prepared by the setup.sh script )
 # The table contains a fairly "large" dataset ( 5.2 M lines ).
 # Based on ASA airline on-time dataset [http://stat-computing.org/dataexpo/2009/]
 # - using Year 1988
 
-spark.sql('''describe table flights.flights_raw''').show(50)
+# ### From Hive 
+#spark.sql('''describe table flights.flights_raw''').show(50)
+#flight_raw_df = spark.sql('select * from flights.flights_raw')
+
+# ### From file 
+
+flight_raw_df = spark.read.csv(
+    path=flights_path,
+    header=True,
+    sep=',',
+    inferSchema=True,
+    nullValue='NA'
+)
+flight_raw_df.cache()
+flight_raw_df.createOrReplaceTempView('flights')
+flight_raw_df.printSchema()
+
 
 # ### Simple data quality analysis
-flight_raw_df = spark.sql('select * from flights.flights_raw')
-flight_raw_df.cache()
-
 # #### Number of rows 
 print("\nDataset has : {} rows".format(flight_raw_df.count()))
 
@@ -48,7 +66,6 @@ print("\nDataset has : {} rows".format(flight_raw_df.count()))
 for col in flight_raw_df.columns: 
   count = flight_raw_df.filter(flight_raw_df[col].isNull()).count()
   print('{} has {} nulls'.format(col,count))
-
 
 
 # ## **Visual analysis**
@@ -61,7 +78,9 @@ for col in flight_raw_df.columns:
 # #### Question 1 : Departure delay distribution
 # using seaborn
 
-pandas_df_Dep_delay = flight_raw_df.select(['DepDelay']).filter(flight_raw_df['DepDelay'].isNotNull())\
+pandas_df_Dep_delay = flight_raw_df\
+  .select(['DepDelay'])\
+  .filter(flight_raw_df['DepDelay'].isNotNull())\
   .sample(False, 0.1 , seed=30)\
   .toPandas()
 pandas_df_Dep_delay.info()
@@ -96,23 +115,32 @@ def histplot(a,b) :
 histplot(pandas_df_Dep_delay['DepDelay'],pandas_df_Dep_delay2['DepDelay'])
 
 
-
 ### Approach 2 agregation and data pruning
   
 # ### Data Selection 
 # Pre Selecting columns of interest (leaving out columns with nulls)
 
-spark_data_df = spark.sql(
-  '''select month, DayofMonth,DayOfWeek,CRSDepTime,CRSArrTime,UniqueCarrier,
-            UniqueCarrier,FlightNum,CRSElapsedTime,Origin,Dest,Cancelled,Diverted
-      from flights.flights_raw
-  ''')            
-spark_data_df.cache()
-spark_data_df.createOrReplaceTempView('flights')
+#spark_data_df = spark.sql(
+#  '''select month, DayofMonth,DayOfWeek,CRSDepTime,CRSArrTime,UniqueCarrier,
+#            UniqueCarrier,FlightNum,CRSElapsedTime,Origin,Dest,Cancelled,Diverted
+#      from flights_raw
+#  ''')            
+#spark_data_df.cache()
+#spark_data_df.createOrReplaceTempView('flights')
 
 # Free up mem ressources from old dataframe
-flight_raw_df.unpersist()
+#flight_raw_df.unpersist()
 
+# #### Get carrier name info 
+carriers_df = spark.read.csv(
+    path=carriers_path,
+    header=True,
+    sep=',',
+    inferSchema=True,
+    nullValue=None
+)
+carriers_df.cache()
+carriers_df.createOrReplaceTempView('carriers')
 
 
 # ### Question 2 : Which airlines have, proportionally, the most cancelations (top 10)
@@ -125,7 +153,7 @@ pandas_df = spark.sql(
            GROUP By UniqueCarrier
            ORDER by avg_cancel DESC
            ) f 
-      INNER JOIN flights.carriers c ON c.code = f.UniqueCarrier
+      INNER JOIN carriers c ON c.code = f.UniqueCarrier
   ''').toPandas()
 pandas_df.head(10)
 

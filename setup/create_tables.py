@@ -1,10 +1,15 @@
+
+#### HDFS Paths for Files #####
+flights_path='airlines/flights/' 
+airport_path='airlines/airports' 
+carrier_path='airlines/carriers'
+
+#### Start Spark Session ####
+
+print("Start Spark session :")
 from pyspark.sql import SparkSession
 from pyspark.sql.types import *
 
-
-print("start session")
-
-print("Start Spark session :")
 spark = SparkSession.builder \
   .master('yarn') \
   .config("spark.executor.instances","2")\
@@ -12,21 +17,19 @@ spark = SparkSession.builder \
   .appName('wine-quality-create-table') \
   .getOrCreate()
 
-print("save airlines files")   
-
 
 # ### Create flights database
+print("Create airlines Database")   
 spark.sql('''drop database flights CASCADE''')
 spark.sql('''create database if not exists flights''')
 
-    
  
 # ### save Flights table 
 # read table
-path='airlines/flights/' 
+print("save flights data")
 
 flights_df = spark.read.csv(
-    path=path,
+    path=flights_path,
     header=True,
     sep=',',
     inferSchema=True,
@@ -43,10 +46,10 @@ print("Flights table saved")
     
 # ### save airports table 
 # read table
-path='airlines/airports' #HDFS location
+print("save airport data")
 
 airports_df = spark.read.csv(
-    path=path,
+    path=airport_path,
     header=True,
     sep=',',
     inferSchema=True,
@@ -56,7 +59,7 @@ airports_df.printSchema()
 
 # save in Hive
 airports_df.orderBy(['state','airport']).coalesce(2)\
-    .write.format('parquet').mode("overwrite")\
+    .write.format('orc').mode("overwrite")\
     .saveAsTable('flights.airports')
     
 print("airports table saved")  
@@ -64,10 +67,10 @@ print("airports table saved")
 
 # ### save carriers table 
 # read table
-path='airlines/carriers' #HDFS location
+print("save carriers data")
 
 carriers_df = spark.read.csv(
-    path=path,
+    path=carrier_path,
     header=True,
     sep=',',
     inferSchema=True,
@@ -77,7 +80,7 @@ carriers_df.printSchema()
 
 # save in Hive
 carriers_df.orderBy(['Code']).coalesce(2)\
-    .write.format('parquet').mode("overwrite")\
+    .write.format('orc').mode("overwrite")\
     .saveAsTable('flights.carriers')
     
 print("carriers table saved")  
