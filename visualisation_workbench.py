@@ -142,8 +142,46 @@ carriers_df = spark.read.csv(
 carriers_df.cache()
 carriers_df.createOrReplaceTempView('carriers')
 
+# ### Question 2 : Are there hours of the day where cancellation are more likely 
+# with mathplotlib
+pandas_df = spark.sql(
+  '''
+  SELECT round((CRSDepTime/100),0) as hour, avg(DepDelay) as avg_delay
+  FROM flights
+  WHERE (DepDelay IS NOT NULL) and (Cancelled = 0)
+  GROUP By hour
+  ORDER by hour ASC
 
-# ### Question 2 : Which airlines have, proportionally, the most cancelations (top 10)
+  ''').toPandas()
+pandas_df
+
+def plotter():
+  import numpy as np
+  sns.set_style("white",{'axes.axisbelow': False})
+  plt.bar( 
+    pandas_df.hour, 
+    pandas_df.avg_delay,
+    align='center', 
+    alpha=0.5,
+    color='#888888',
+  )
+  plt.grid(color='#FFFFFF', linestyle='-', linewidth=0.5, axis='y')
+  plt.title(
+    'Average dep delay (in minute) by hour of the day',
+    color='grey'
+  )
+  plt.xticks(
+    np.arange(25),
+    np.arange(25),
+    color='grey'    
+  )
+  plt.yticks(color='grey')
+  sns.despine(left=True,bottom=True)
+plotter()
+
+
+
+# ### Question 3 : Which airlines have, proportionally, the most cancelations (top 10)
 pandas_df = spark.sql(
   '''Select c.Description as airline, c.code, f.avg_cancel, nb_flights, nb_cancelled
      FROM (
