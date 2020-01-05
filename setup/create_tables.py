@@ -1,4 +1,3 @@
-
 #### HDFS Paths for Files #####
 flights_path='airlines/flights/' 
 airport_path='airlines/airports' 
@@ -19,11 +18,16 @@ spark = SparkSession.builder \
 
 
 # ### Create flights database
-print("Create airlines Database")   
-spark.sql('''drop database flights CASCADE''')
-spark.sql('''create database if not exists flights''')
+database = 'flights'
 
- 
+print("Create airlines Database")
+
+try: 
+  spark.sql('''create database if not exists flights''')
+except:
+  database = 'default'
+
+
 # ### save Flights table 
 # read table
 print("save flights data")
@@ -40,7 +44,7 @@ flights_df.printSchema()
 # save in Hive
 flights_df.orderBy(['Month','DayofMonth']).coalesce(4)\
     .write.format('orc').mode("overwrite")\
-    .saveAsTable('flights.flights_raw')
+    .saveAsTable(database+'.flights_raw')
 
 print("Flights table saved")  
     
@@ -60,7 +64,7 @@ airports_df.printSchema()
 # save in Hive
 airports_df.orderBy(['state','airport']).coalesce(2)\
     .write.format('orc').mode("overwrite")\
-    .saveAsTable('flights.airports')
+    .saveAsTable(database+'.airports')
     
 print("airports table saved")  
    
@@ -81,8 +85,12 @@ carriers_df.printSchema()
 # save in Hive
 carriers_df.orderBy(['Code']).coalesce(2)\
     .write.format('orc').mode("overwrite")\
-    .saveAsTable('flights.carriers')
+    .saveAsTable(database+'.carriers')
     
 print("carriers table saved")  
-  
+
+# ### Show databases
+spark.sql("show tables in " + database).show()
+
+
 spark.stop()

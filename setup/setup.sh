@@ -1,7 +1,7 @@
 #!/bin/sh
 
 mkdir -p /home/cdsw/airlines/flights/
-wget http://stat-computing.org/dataexpo/2009/1988.csv.bz2 -O /home/cdsw/airlines/flights/1988.csv.bz2
+wget https://mlamairesse.s3-eu-west-1.amazonaws.com/Airlines_Dataset/1988.csv.bz2 -O /home/cdsw/airlines/flights/1988.csv.bz2
 
 mkdir -p /home/cdsw/airlines/airports/
 wget http://stat-computing.org/dataexpo/2009/airports.csv -O /home/cdsw/airlines/airports/airports.csv
