@@ -1,7 +1,8 @@
 #### HDFS Paths for Files #####
 flights_path='airlines/flights/' 
-airport_path='airlines/airports' 
-carrier_path='airlines/carriers'
+airport_path='airlines/airports/' 
+carrier_path='airlines/carriers/'
+s3_prefix='s3a://ml-field/demo/flight-analysis/data/'
 
 #### Start Spark Session ####
 
@@ -9,13 +10,19 @@ print("Start Spark session :")
 from pyspark.sql import SparkSession
 from pyspark.sql.types import *
 
-spark = SparkSession.builder \
-  .master('yarn') \
-  .config("spark.executor.instances","2")\
+spark = SparkSession\
+  .builder\
+  .appName('wine-quality-analysis')\
   .config("spark.executor.memory","2g")\
-  .appName('wine-quality-create-table') \
+  .config("spark.executor.cores","2")\
+  .config("spark.executor.instances","3")\
+  .config("spark.hadoop.fs.s3a.metadatastore.impl","org.apache.hadoop.fs.s3a.s3guard.NullMetadataStore")\
+  .config("spark.yarn.access.hadoopFileSystems", "s3a://ml-field/demo/flight-analysis/data/")\
   .getOrCreate()
 
+#  .config("spark.hadoop.fs.s3a.aws.credentials.provider","org.apache.hadoop.fs.s3a.AnonymousAWSCredentialsProvider")\
+
+        
 
 # ### Create flights database
 database = 'flights'
@@ -33,7 +40,7 @@ except:
 print("save flights data")
 
 flights_df = spark.read.csv(
-    path=flights_path,
+    path=s3_prefix+flights_path,
     header=True,
     sep=',',
     inferSchema=True,
@@ -53,7 +60,7 @@ print("Flights table saved")
 print("save airport data")
 
 airports_df = spark.read.csv(
-    path=airport_path,
+    path=s3_prefix+airport_path,
     header=True,
     sep=',',
     inferSchema=True,
@@ -74,7 +81,7 @@ print("airports table saved")
 print("save carriers data")
 
 carriers_df = spark.read.csv(
-    path=carrier_path,
+    path=s3_prefix+carrier_path,
     header=True,
     sep=',',
     inferSchema=True,
