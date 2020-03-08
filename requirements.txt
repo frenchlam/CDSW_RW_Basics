@@ -1,5 +1,5 @@
 ipython==7.10.0
-pandas==0.24.2
+pandas
 thrift_sasl
 pyhive
 sqlalchemy

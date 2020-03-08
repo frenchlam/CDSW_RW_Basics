@@ -9,6 +9,8 @@ wget http://stat-computing.org/dataexpo/2009/airports.csv -O /home/cdsw/airlines
 mkdir -p /home/cdsw/airlines/carriers/
 wget http://stat-computing.org/dataexpo/2009/carriers.csv -O /home/cdsw/airlines/carriers/carriers.csv
 
+mkdir -p /home/cdsw/airlines/from_hdfs/
+
 hdfs dfs -mkdir -p airlines/
 hdfs dfs -copyFromLocal -f /home/cdsw/airlines/
 

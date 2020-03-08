@@ -16,6 +16,7 @@ spark = SparkSession.builder \
   .appName('wine-quality-create-table') \
   .getOrCreate()
 
+print("started")
 
 # ### Create flights database
 database = 'flights'
