@@ -1,3 +1,11 @@
+#### Requiered when using custom repository #### 
+### https://pip.pypa.io/en/stable/reference/pip_install/#options
+--index-url https://pypi.org/simple/
+
+## Requirered if index is in http
+--trusted-host https://pypi.org/
+
+### list packages  here (and version - optional)
 ipython==7.10.0
 pandas
 thrift_sasl
