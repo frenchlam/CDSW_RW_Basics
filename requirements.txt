@@ -6,7 +6,7 @@
 --trusted-host https://pypi.org/
 
 ### list packages  here (and version - optional)
-ipython==7.16.3
+ipython==8.10.0
 pandas
 thrift_sasl
 pyhive
